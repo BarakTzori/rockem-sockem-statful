@@ -1,0 +1,99 @@
+The state machine for rockem-sockem has four states {N, R, B, T}
+  The N state describes Neutral (an image with nothing in it)
+  The R state describes Red (image with Red head in it and nothing else)
+  The B state describes Blue (image with Blue head in it and nothing else)
+  The T state describes Trigger (image with Arm in it from either side and any head)
+    The Trigger state is seen during the action of reseting the robot's head
+
+There are 4 possible inputs into each state {n, r, b, t}
+  The input n is seen when an image predicted as Neutral appears
+  The input r is seen when an image predicted as Red appears
+  The input b is seen when an image predicted as Blue appears
+  The input t is seen when an image predicted as Trigger appears
+
+Thus each state has 4 transitions out of it, one for each input.
+The transitions are defined below as such:
+
+STATE : input->STATE (action), input->STATE (action), etc
+
+N : n->N, r->R (r_count=0), b->B (b_count=0), t->N
+
+R: n->N, r->R (r_count++), b->B (b_count=0), t->T (checkWinner(r_count, b_count))
+
+B: n->N, r->R (r_count=0), b->B (b_count++), t->T (checkWinner(r_count, b_count))
+
+T: n->N, r->N, b->N, t->T
+
+All that's neccessary  is to define the checkWinner function properly for now assume check winner works
+
+rockem_sockem_state_machine:
+
+  current_state = N;
+  r_count, b_count = 0, 0;
+
+  function consume_input(input):
+    prev_state = current_state
+    if current_state === N:
+      transition_from_N(input);
+    if current_state === R:
+      transition_from_R(input);
+    if current_state === B:
+      transition_from_B(input);
+    if current_state === T:
+      transition_from_T(input);
+
+
+  transition_from_N(input):
+    if input === n:
+      current_state = N;
+    if input === r:
+      current_state = R;
+      r_count = 0;
+    if input === b:
+      current_state = B;
+      r_count = 0;
+    if input === t:
+      current_state = N;
+
+  transition_from_R(input):
+    if input === n:
+      current_state = N;
+    if input === r:
+      current_state = R;
+      r_count++;
+    if input === b:
+      current_state = B;
+      b_count = 0;
+    if input === t:
+      current_state = T;
+      check_winner(r_count, b_count);
+
+  transition_from_B(input):
+    if input === n:
+      current_state = N;
+    if input === r:
+      current_state = R;
+      r_count = 0;
+    if input === b:
+      current_state = B;
+      b_count++;
+    if input === t:
+      current_state = T;
+      check_winner(r_count, b_count);
+
+  transition_from_T(input):
+    if input === n:
+      current_state = N;
+    if input === r:
+      current_state = N;
+    if input === b:
+      current_state = N;
+    if input === t:
+      current_state = T;
+
+  check_winner(r_count, b_count):
+    if r_count === 0 and b_count is high enough:
+      Red wins, send message to statful
+
+    if b_count === 0 and r_count is high enough:
+      Blue wins, send message to statful
